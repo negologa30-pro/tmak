@@ -1,0 +1,118 @@
+<!DOCTYPE index.html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Clã Ragnarok</title>
+<style>
+:root{--blue:#0b3d91;--blue2:#1565c0;--orange:#ff7a00;--orange2:#ffa040;--bg:#f4f8ff;--card:#ffffff;--text:#10264d;--muted:#5c6f91;--line:#dbe5f5;--row:#fff7ee;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#081a3a;--card:#0f2754;--text:#f2f6ff;--muted:#a9bbdd;--line:#23417a;--row:#173366}}
+:root[data-theme="dark"]{--bg:#081a3a;--card:#0f2754;--text:#f2f6ff;--muted:#a9bbdd;--line:#23417a;--row:#173366}
+*{box-sizing:border-box}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--bg);color:var(--text);font-family:"Segoe UI",system-ui,Arial,sans-serif;min-height:100vh}
+header{background:linear-gradient(135deg,var(--blue),var(--blue2) 60%,var(--orange));color:#fff;text-align:center;padding:40px 16px 48px;border-bottom:6px solid var(--orange)}
+header h1{margin:0;font-size:clamp(2rem,6vw,3.4rem);letter-spacing:2px;text-transform:uppercase}
+header p{margin:10px 0 0;font-size:clamp(1rem,2.5vw,1.25rem);font-style:italic;color:#fff}
+main{max-width:860px;margin:-26px auto 40px;padding:0 14px}
+.card{background:var(--card);border-radius:14px;box-shadow:0 6px 24px rgba(11,61,145,.15);padding:18px;margin-bottom:18px;border-top:4px solid var(--orange)}
+h2{margin:0 0 12px;color:var(--blue2);font-size:1.15rem}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) h2{color:var(--orange2)}}
+.wrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse;min-width:520px}
+th{background:var(--blue);color:#fff;text-align:left;padding:10px;font-size:.9rem}
+th:first-child{border-radius:8px 0 0 0}th:last-child{border-radius:0 8px 0 0}
+td{padding:8px 10px;border-bottom:1px solid var(--line)}
+td.pos{width:56px;font-weight:700;text-align:center;font-size:1.2rem}
+tr.top{background:var(--row)}
+tr.p1{border-left:6px solid var(--orange)}tr.p2{border-left:6px solid var(--blue2)}tr.p3{border-left:6px solid var(--orange2)}
+tr.top input{font-weight:700}
+input{width:100%;padding:7px 9px;border:1px solid var(--line);border-radius:8px;background:var(--card);color:var(--text);font:inherit}
+input:focus{outline:2px solid var(--orange);border-color:var(--orange)}
+td.num input{max-width:130px}
+button{cursor:pointer;border:0;border-radius:8px;padding:9px 16px;font:inherit;font-weight:600;background:var(--orange);color:#fff}
+button:hover{background:#e56d00}
+button.del{background:transparent;color:var(--muted);padding:6px 10px;border:1px solid var(--line)}
+button.del:hover{background:#c62828;color:#fff;border-color:#c62828}
+form{display:grid;grid-template-columns:2fr 1fr 1fr auto;gap:10px}
+@media(max-width:600px){form{grid-template-columns:1fr 1fr}form input:first-child,form button{grid-column:1/-1}}
+.hint{color:var(--muted);font-size:.85rem;margin:10px 0 0}
+.empty{text-align:center;color:var(--muted);padding:20px}
+</style>
+</head>
+<body>
+<header>
+  <h1>Clã Ragnarok</h1>
+  <p>Determinação e Persistência é para os Fortes.</p>
+</header>
+<main>
+  <section class="card">
+    <h2>🏆 Placar do Clã</h2>
+    <div class="wrap">
+      <table>
+        <thead><tr><th>#</th><th>Nome do membro</th><th>Dias online</th><th>Total de pontos</th><th></th></tr></thead>
+        <tbody id="rows"></tbody>
+      </table>
+    </div>
+    <p class="hint">Edite qualquer campo diretamente na tabela. Ao terminar de editar, o placar se reorganiza por pontos. Os 3 primeiros ficam em destaque.</p>
+  </section>
+  <section class="card">
+    <h2>➕ Adicionar novo membro</h2>
+    <form id="add">
+      <input id="n" placeholder="Nome do membro" required>
+      <input id="d" type="number" min="0" placeholder="Dias online" value="0">
+      <input id="p" type="number" min="0" placeholder="Pontos" value="0">
+      <button type="submit">Adicionar</button>
+    </form>
+  </section>
+</main>
+<script>
+var KEY="cla-ragnarok-v1";
+var members=[
+ {id:1,name:"Membro 1 teste",days:28,points:1850},
+ {id:2,name:"Membro 2 teste",days:25,points:1620},
+ {id:3,name:"Membro 3 teste",days:22,points:1480},
+ {id:4,name:"Membro 4 teste",days:22,points:1480},
+ {id:5,name:"Membro 5 teste",days:18,points:990},
+ {id:6,name:"Membro 6 teste",days:12,points:640}
+];
+try{var s=localStorage.getItem(KEY);if(s){var p=JSON.parse(s);if(Array.isArray(p))members=p;}}catch(e){}
+function save(){try{localStorage.setItem(KEY,JSON.stringify(members));}catch(e){}}
+function esc(t){return String(t).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/"/g,"&quot;");}
+function render(){
+  members.sort(function(a,b){return b.points-a.points;});
+  var tb=document.getElementById("rows");
+  if(!members.length){tb.innerHTML='<tr><td colspan="5" class="empty">Nenhum membro ainda. Adicione o primeiro!</td></tr>';return;}
+  var medals=["🥇","🥈","🥉"];
+  tb.innerHTML=members.map(function(m,i){
+    var cls=i<3?"top p"+(i+1):"";
+    return '<tr class="'+cls+'"><td class="pos">'+(i<3?medals[i]:(i+1)+"º")+'</td>'+
+    '<td><input data-id="'+m.id+'" data-f="name" value="'+esc(m.name)+'"></td>'+
+    '<td class="num"><input type="number" min="0" data-id="'+m.id+'" data-f="days" value="'+m.days+'"></td>'+
+    '<td class="num"><input type="number" min="0" data-id="'+m.id+'" data-f="points" value="'+m.points+'"></td>'+
+    '<td><button class="del" data-del="'+m.id+'" title="Remover">✕</button></td></tr>';
+  }).join("");
+}
+document.getElementById("rows").addEventListener("change",function(e){
+  var t=e.target,id=+t.dataset.id,f=t.dataset.f;if(!f)return;
+  var m=members.find(function(x){return x.id===id;});if(!m)return;
+  m[f]=f==="name"?t.value.trim()||m.name:Math.max(0,parseInt(t.value,10)||0);
+  save();render();
+});
+document.getElementById("rows").addEventListener("click",function(e){
+  var id=e.target.dataset.del;if(!id)return;
+  var m=members.find(function(x){return x.id===+id;});
+  if(m&&confirm("Remover "+m.name+" do clã?")){members=members.filter(function(x){return x.id!==+id;});save();render();}
+});
+document.getElementById("add").addEventListener("submit",function(e){
+  e.preventDefault();
+  var n=document.getElementById("n").value.trim();if(!n)return;
+  var id=members.reduce(function(a,m){return Math.max(a,m.id);},0)+1;
+  members.push({id:id,name:n,days:Math.max(0,parseInt(document.getElementById("d").value,10)||0),points:Math.max(0,parseInt(document.getElementById("p").value,10)||0)});
+  save();render();this.reset();document.getElementById("d").value=0;document.getElementById("p").value=0;
+});
+render();
+</script>
+</body>
+</html>
